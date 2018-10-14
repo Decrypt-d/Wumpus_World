@@ -38,3 +38,4 @@ submission: all
 	 echo ""; \
 	 zip -rqq s_$${teamName}.zip $(SOURCE_DIR) $(BIN_DIR) $(DOC_DIR)
 
+
