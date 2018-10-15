@@ -21,39 +21,34 @@
 
 MyAI::MyAI() : Agent()
 {
-	// ======================================================================
-	// YOUR CODE BEGINS
-	// ======================================================================
-	
-	// ======================================================================
-	// YOUR CODE ENDS
-	// ======================================================================
+   //here would be intializing variables and shit, not sure if should put global type variables here or in the hpp file
+   movesInAdvance = 6;
+   totalMoves = 0;
+   currentScore = 0;
+   currentxValue = 1;
+   currentyValue = 1;
+   wumpusKilled = 0;
 }
-	
-Agent::Action MyAI::getAction
-(
-	bool stench,
-	bool breeze,
-	bool glitter,
-	bool bump,
-	bool scream
-)
+
+//workhorse function, world passes these input in (all the bools as parameters) in line 105 of world.cpp) parameters is how it communicates the world info
+Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream)
 {
-	// ======================================================================
-	// YOUR CODE BEGINS
-	// ======================================================================
+   //STEP 1: IF NEEDED MAKE NEW TILE BASED ON INFO PASSED FROM PARAMETERS (NOT NEEDED IF SHOOT OR SOMETHING)
+       //will be looping through multiple times concerned about object existence a bit here make sure creating distinct objects, not sure if need new keyword
+   tile currentTile;
+   currentTile.glitter = glitter;
+   currentTile.stench = stench;
+   currentTile.breeze = breeze;
+   currentTile.leftWall = NULL;
+   currentTile.bottomWall = NULL;
+
+   //STEP 2: add the new tile
+   worldMap[currentxValue][currentyValue] = currentTile;
+
+   //STEP 3: update info about neighbors, if neighbors don't exist yet instantiate them
+
+   //STEP 4: based on state info choose greediest course of action
+
 	
 	return CLIMB;
-	// ======================================================================
-	// YOUR CODE ENDS
-	// ======================================================================
 }
-
-// ======================================================================
-// YOUR CODE BEGINS
-// ======================================================================
-
-
-// ======================================================================
-// YOUR CODE ENDS
-// ======================================================================
