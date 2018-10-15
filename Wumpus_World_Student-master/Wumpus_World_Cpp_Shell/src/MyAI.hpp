@@ -27,14 +27,7 @@ class MyAI : public Agent
 public:
 	MyAI ( void );
 	
-	Action getAction
-	(
-		bool stench,
-		bool breeze,
-		bool glitter,
-		bool bump,
-		bool scream
-	);
+	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
 	
 	// ======================================================================
 	// YOUR CODE BEGINS
