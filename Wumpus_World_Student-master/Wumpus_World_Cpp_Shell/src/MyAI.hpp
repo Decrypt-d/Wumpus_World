@@ -26,6 +26,7 @@ class MyAI : public Agent
 {
 public:
 	MyAI ( void );
+	int movesInAdvance = 6;
 	
 	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
 	class node{
@@ -34,7 +35,7 @@ public:
 		int minAction;
 		node* pathList;
 	};
-	
+	void generatePath(node& startNode);
 	// ======================================================================
 	// YOUR CODE BEGINS
 	// ======================================================================
