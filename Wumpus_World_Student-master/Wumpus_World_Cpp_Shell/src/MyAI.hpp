@@ -28,6 +28,12 @@ public:
 	MyAI ( void );
 	
 	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
+	class node{
+		int value;
+		int previousAction;
+		int minAction;
+		node* pathList;
+	};
 	
 	// ======================================================================
 	// YOUR CODE BEGINS
