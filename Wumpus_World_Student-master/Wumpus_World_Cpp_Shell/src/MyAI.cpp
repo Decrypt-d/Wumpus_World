@@ -22,17 +22,23 @@
 using namespace std;
 MyAI::MyAI() : Agent()
 {
-   //here would be intializing variables and shit, not sure if should put global type variables here or in the hpp file
+   //meta info
    movesInAdvance = 6;
    totalMoves = 0;
    currentScore = 0;
+   wumpusKilled = 0;
+
+   //position info
+   orientation = 2;
+   shouldModifyPos = false;
    currentxValue = 1;
    currentyValue = 1;
-   wumpusKilled = 0;
-   orientation = 2;
+
+   //wall and boundary info
    topWall = NULL;
    rightWall = NULL;
-   shouldModifyPos = false;
+
+   //backtracking info
    turningAround = false;
    turningComplete = false;
 }
@@ -140,7 +146,6 @@ int MyAI::backtrackAction()
        trail.pop();
        lastAction = trail.top();
    }
-   
    if(lastAction == TURN_LEFT)
       return TURN_RIGHT;
    else if(lastAction == TURN_RIGHT && turningAround == false)
@@ -162,25 +167,40 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
 {
    //heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
    //add action to stack so we know where we are in order to backtrack correctly
+
+   //no matter what move chosen moves increases by 1 and score decreases by 1
+   totalMoves++;
+   currentScore--:
    if(currentTile.breeze == true || currentTile.stench == true)
       if(currentTile.glitter == true)
+      {
          trail.push(GRAB);
+         currentScore += 1000;
          return GRAB;
+      }
       //this case you need to start backtracking to climb out
       else if(currentTile.xvalue != 0 && currentTile.yvalue != 0)
          return backtrackAction();
       else //this is case where we are back at original sqaure
+      {
          trail.push(CLIMB);
          return CLIMB;
+      }
    //in case where there is no danger you pick a random direction and proceed in that direction
    else
+   {
       vector<int> availableDirections = determineWalls(currentX, currentY)
       int randomIndex = rand() % availableDirections.size();
       int chosenDirection = availableDirections[randomIndex];
       if(orientation == chosenDirection)
+      {
+         trail.push(action)
          return FOWARD;
+      }
       else
+      {
          int action = adjustDirection(orientation,chosenDirection);
          trail.push(action);
          return action;
-}
+      }
+}   }
