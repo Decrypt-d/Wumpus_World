@@ -22,7 +22,9 @@
 
 #include "Agent.hpp"
 #include <map>
+#include <stack> 
 #include <iostream>
+
 
 using namespace std;
 
@@ -39,6 +41,9 @@ public:
 	bool shouldModifyPos;
 	int orientation; 
 	enum {NORTH,EAST,SOUTH,WEST};
+	int topWall;
+	int rightWall;
+	Stack<int> trail;
 
 	//position
 	int currentxValue;
@@ -57,12 +62,6 @@ public:
 		   double pit;
 		   double wumpus;
 		   double gold;
-
-		   //indicates presence of wall
-		   bool leftWall;
-		   bool rightWall;
-		   bool topWall;
-		   bool bottomWall;
 	};
 
 	//vector that will contain all tiles

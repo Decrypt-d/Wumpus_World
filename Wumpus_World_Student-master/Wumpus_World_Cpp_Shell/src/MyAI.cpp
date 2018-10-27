@@ -73,8 +73,69 @@ bool MyAI::tileExist(const int & x,const int & y)
 {
    map<int, std::map<int, tile>>::iterator iter = worldMap.find(x);
    map<int, tile>::iterator iter2 = worldMap[x].find(y);
-   return 
+   return iter != worldMap.end() && iter2 != worldMap[x].end() ? true : false;
 }
+
+int MyAI::adjustDirection(int orientation, int chosenDirection)
+{
+   switch(orientation) {
+      case 1 :
+         switch(chosenDirection)
+            case 2 || 3:
+               return TURN_RIGHT;
+            case 3:
+               return TURN_RIGHT;
+            case 4:
+               return TURN_LEFT;
+      case 2 :
+       switch(chosenDirection)
+            case 1:
+               return TURN_LEFT;
+            case 3:
+               return TURN_RIGHT;
+            case 4:
+               return TURN_RIGHT;
+      case 3 :
+       switch(chosenDirection)
+            case 1:
+               return TURN_RIGHT;
+            case 2:
+               return TURN_RIGHT;
+            case 4:
+               return TURN_LEFT;
+      case 4 :
+       switch(chosenDirection)
+            case 1:
+               return TURN_RIGHT;
+            case 2:
+               return TURN_RIGHT;
+            case 3:
+               return TURN_LEFT;
+}
+
+void MyAI::
+
+
+int MyAI::backtrackAction()
+{
+   lastAction = trail.top()
+   trail.pop()
+   
+   //gets to last relevant action
+   while(lastAction == SHOOT || lastAction == GRAB) || lastAction == CLIMB)
+   {
+       trail.pop();
+       lastAction = trail.top();
+   }
+   
+   if(lastAction == TURN_LEFT)
+      return TURN_RIGHT;
+   else if(lastAction == TURN_RIGHT)
+      return TURN_LEFT;
+   else //case for if last action was foward
+    
+}
+
 
 
 //workhorse function, world passes these input in (all the bools as parameters) in line 105 of world.cpp) parameters is how it communicates the world info
@@ -84,7 +145,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        //will be looping through multiple times concerned about object existence a bit here make sure creating distinct objects, not sure if need new keyword
    
    //add info to stack so we know where we are in order to backtrack correctly
-   if (iter == worldMap.end() || iter2 == worldMap[currentxValue].end())
+   if ()
    {
        tile currentTile;
        currentTile.glitter = glitter;
@@ -93,32 +154,26 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        worldMap[currentxValue][currentyValue] = currentTile;
    }   
    
-
-
-
    //heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
    if(currentTile.breeze == true || currentTile.stench == true)
       if(currentTile.glitter == true)
          trail.push(GRAB);
          return GRAB;
+      //this case you need to start backtracking to climb out
       else if(currentTile.xvalue != 0 && currentTile.yvalue != 0)
-         #back track to previous sqaure
+         return backtrackAction();
       else //this is case where we are back at original sqaure
          trail.push(CLIMB);
          return CLIMB;
+   //in case where there is no danger you pick a random direction and proceed in that direction
    else
-      int randomIndex = rand() % determineWalls(currentX, currentY).size();
-
-      
-      #randomly move in one of those directions
-      #trail.push(theaction)
-
-
-
-   //STEP 3: update info about neighbors, if neighbors don't exist yet instantiate them
-
-   //STEP 4: based on state info choose greediest course of action
-
-	
-	return CLIMB;
+      vector<int> availableDirections = determineWalls(currentX, currentY)
+      int randomIndex = rand() % availableDirections.size();
+      int chosenDirection = availableDirections[randomIndex];
+      if(orientation == chosenDirection)
+         return FOWARD;
+      else
+         int action = adjustDirection(orientation,chosenDirection);
+         trail.push(action);
+         return action;
 }
