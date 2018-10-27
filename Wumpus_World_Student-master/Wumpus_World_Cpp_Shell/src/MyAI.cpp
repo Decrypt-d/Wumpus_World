@@ -33,6 +33,7 @@ MyAI::MyAI() : Agent()
    topWall = NULL;
    rightWall = NULL;
    shouldModifyPos = false;
+   turningAround = false;
 }
 
 void MyAI::handlePositionChange(const bool & bump)
@@ -126,7 +127,7 @@ int MyAI::adjustDirection(int orientation, int chosenDirection)
 }
 
 
-
+//a little bit suspicious on logic here
 int MyAI::backtrackAction()
 {
    lastAction = trail.top()
@@ -141,9 +142,16 @@ int MyAI::backtrackAction()
    
    if(lastAction == TURN_LEFT)
       return TURN_RIGHT;
-   else if(lastAction == TURN_RIGHT)
+   else if(lastAction == TURN_RIGHT && turningAround == false)
       return TURN_LEFT;
-   else //case for if last action was foward
+   else if(lastAction == TURN_RIGHT && turningAround == true && turningComplete == false)
+      return TURN_RIGHT
+   else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
+   {
+      turningAround = false;
+      turningComplete = false;
+      return FOWARD
+   }
         
 }
 
