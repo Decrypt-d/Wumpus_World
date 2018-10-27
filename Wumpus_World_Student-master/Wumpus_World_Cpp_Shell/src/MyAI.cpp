@@ -76,6 +76,18 @@ bool MyAI::tileExist(const int & x,const int & y)
    return iter != worldMap.end() && iter2 != worldMap[x].end() ? true : false;
 }
 
+void MyAI::addNewTile()
+{
+   if (titleExist(currentxValue,currentyValue))
+   {
+       tile currentTile;
+       currentTile.glitter = glitter;
+       currentTile.stench = stench;
+       currentTile.breeze = breeze;
+       worldMap[currentxValue][currentyValue] = currentTile;
+   }   
+}
+
 int MyAI::adjustDirection(int orientation, int chosenDirection)
 {
    switch(orientation) {
@@ -113,7 +125,6 @@ int MyAI::adjustDirection(int orientation, int chosenDirection)
                return TURN_LEFT;
 }
 
-void MyAI::
 
 
 int MyAI::backtrackAction()
@@ -133,7 +144,7 @@ int MyAI::backtrackAction()
    else if(lastAction == TURN_RIGHT)
       return TURN_LEFT;
    else //case for if last action was foward
-    
+        
 }
 
 
@@ -145,14 +156,6 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        //will be looping through multiple times concerned about object existence a bit here make sure creating distinct objects, not sure if need new keyword
    
    //add info to stack so we know where we are in order to backtrack correctly
-   if ()
-   {
-       tile currentTile;
-       currentTile.glitter = glitter;
-       currentTile.stench = stench;
-       currentTile.breeze = breeze;
-       worldMap[currentxValue][currentyValue] = currentTile;
-   }   
    
    //heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
    if(currentTile.breeze == true || currentTile.stench == true)
