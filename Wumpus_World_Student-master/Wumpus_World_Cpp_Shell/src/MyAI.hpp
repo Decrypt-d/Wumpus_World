@@ -21,7 +21,7 @@
 #define MYAI_LOCK
 
 #include "Agent.hpp"
-#include <vector>
+#include <map>
 #include <iostream>
 
 using namespace std;
@@ -36,6 +36,9 @@ public:
 	int totalMoves;
 	int currentScore;
 	bool wumpusKilled;
+	bool shouldModifyPos;
+	int orientation; 
+	enum {NORTH,EAST,SOUTH,WEST};
 
 	//position
 	int currentxValue;
@@ -44,11 +47,6 @@ public:
 	class tile{
 	
 	   public:
-	      //list of adjacent nodes, if it is a corner or edge and cant have certain neighbors it is null
-		   tile* rightNeighbor;
-		   tile* leftNeighbor;
-		   tile* topNeighbor;
-		   tile* bottomNeighbor;
 
 		   //possible features on a given tile
 		   bool glitter;
@@ -68,7 +66,7 @@ public:
 	};
 
 	//vector that will contain all tiles
-	vector< vector<tile>> worldMap;
+	map<int,map<int,tile>> worldMap;
 	
 	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
 };
