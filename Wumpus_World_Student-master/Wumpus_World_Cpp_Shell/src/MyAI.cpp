@@ -34,6 +34,7 @@ MyAI::MyAI() : Agent()
    rightWall = NULL;
    shouldModifyPos = false;
    turningAround = false;
+   turningComplete = false;
 }
 
 void MyAI::handlePositionChange(const bool & bump)
@@ -151,8 +152,7 @@ int MyAI::backtrackAction()
       turningAround = false;
       turningComplete = false;
       return FOWARD
-   }
-        
+   }    
 }
 
 
@@ -160,12 +160,8 @@ int MyAI::backtrackAction()
 //workhorse function, world passes these input in (all the bools as parameters) in line 105 of world.cpp) parameters is how it communicates the world info
 Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream)
 {
-   //STEP 1: IF NEEDED MAKE NEW TILE BASED ON INFO PASSED FROM PARAMETERS (NOT NEEDED IF SHOOT OR SOMETHING)
-       //will be looping through multiple times concerned about object existence a bit here make sure creating distinct objects, not sure if need new keyword
-   
-   //add info to stack so we know where we are in order to backtrack correctly
-   
    //heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
+   //add action to stack so we know where we are in order to backtrack correctly
    if(currentTile.breeze == true || currentTile.stench == true)
       if(currentTile.glitter == true)
          trail.push(GRAB);
