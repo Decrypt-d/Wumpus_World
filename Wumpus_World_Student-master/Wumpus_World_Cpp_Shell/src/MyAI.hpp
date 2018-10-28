@@ -39,10 +39,8 @@ public:
 	int totalMoves;
 	int currentScore;
 	bool wumpusKilled;
-	bool goldGrabbed;
 
 	//position info
-	bool shouldModifyPos;
 	int orientation; 
 	int currentxValue;
 	int currentyValue;
@@ -53,9 +51,11 @@ public:
 	int rightWall;
 
 	//backtracking functionality
-	stack<int> trail;
+	stack<Agent::Action> trail;
+	bool backTrackingOn;
 	bool turningAround;
-	bool turningComplete;
+	bool turningAroundComplete;
+	
 	
 	class tile{
 	
@@ -70,6 +70,16 @@ public:
 		   double pit;
 		   double wumpus;
 		   double gold;
+		   tile & operator = (const tile & second)
+		   {
+			   this->glitter = second.glitter;
+			   this->breeze = second.breeze;
+			   this->stench = second.stench;
+			   this->pit = second.pit;
+			   this->wumpus = second.wumpus;
+			   this->gold = second.gold;
+			   return *this;
+		   }
 	};
 
 	//vector that will contain all tiles
@@ -79,10 +89,12 @@ public:
 	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
 
     //position related methods
-	void handlePositionChange(const bool & bump);
-    vector<int> determineWalls(int currentX, int currrentY);
-	int adjustDirection(int orientation, int chosenDirection);
-    int backtrackAction();
+	void handlePositionChange();
+    vector<MyAI::direction> determineWalls(int currentX, int currrentY);
+	Agent::Action adjustDirection(int chosenDirection);
+	Agent::Action backtrackAction();
+	MyAI::direction resolveNewOrientation(const int & action);
+	Agent::Action resolveDirection(int chosenDirection);
 
 	//tile related methods
     bool tileExist(const int & x,const int & y);

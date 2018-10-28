@@ -19,6 +19,8 @@
 
 #include "MyAI.hpp"
 #include <algorithm>
+#include <iostream>
+
 
 using namespace std;
 MyAI::MyAI() : Agent()
@@ -28,11 +30,9 @@ MyAI::MyAI() : Agent()
     totalMoves = 0;
     currentScore = 0;
     wumpusKilled = false;
-    goldGrabbed = false;
 
     //position info
-    orientation = 2;
-    shouldModifyPos = false;
+    orientation = EAST;
     currentxValue = 1;
     currentyValue = 1;
 
@@ -41,69 +41,82 @@ MyAI::MyAI() : Agent()
     rightWall = -1;
 
     //backtracking info
+    backTrackingOn = false;
     turningAround = false;
-    turningComplete = false;
+    turningAroundComplete = false;
 }
 
-void MyAI::handlePositionChange(const bool &bump)
+void MyAI::handlePositionChange()
 {
-    if (shouldModifyPos && !bump)
-    {
-        if (orientation == NORTH)
-            currentyValue += 1;
-        else if (orientation == SOUTH)
-            currentyValue -= 1;
-        else if (orientation == EAST)
-            currentxValue += 1;
-        else if (orientation == WEST)
-            currentxValue -= 1;
-        shouldModifyPos = false;
-    }
+    if (orientation == NORTH)
+        currentyValue += 1;
+    else if (orientation == SOUTH)
+        currentyValue -= 1;
+    else if (orientation == EAST)
+        currentxValue += 1;
+    else if (orientation == WEST)
+        currentxValue -= 1;
 }
-
 
 void MyAI::handleBump()
 {
-
+    if (orientation == EAST)
+    {
+        currentxValue -= 1;
+        rightWall = currentxValue;
+    }
+    else if (orientation == NORTH)
+    {
+        currentyValue -= 1;
+        topWall = currentyValue;
+    }
 }
 
-
-vector<int> MyAI::determineWalls(int currentX, int currentY)
+template <typename T1>
+void removeFromVector(std::vector<T1> & toRemoveFrom, T1 toRemove)
 {
-    vector<int> availableDirections;
-    vector<int>:: iterator iter;
-    iter = availableDirections.begin();
+    for (typename std::vector<T1>::iterator beg = toRemoveFrom.begin(); beg != toRemoveFrom.end(); ++beg)
+        if (*beg == toRemove)
+        {
+            toRemoveFrom.erase(beg); 
+            return;
+        }
+}
 
-    availableDirections.insert(iter, WEST);
-    availableDirections.insert(iter + 1, EAST);
-    availableDirections.insert(iter + 2, NORTH);
-    availableDirections.insert(iter + 3, SOUTH);
+vector<MyAI::direction> MyAI::determineWalls(int currentX, int currentY)
+{
+    vector<MyAI::direction> availableDirections;
+    availableDirections.push_back(WEST);
+    availableDirections.push_back(EAST);
+    availableDirections.push_back(NORTH);
+    availableDirections.push_back(SOUTH);
 
     if (currentX == 1)
-        remove(availableDirections.begin(), availableDirections.end(), WEST);
-    
+        removeFromVector(availableDirections, WEST);
+
     if (currentY == 1)
-       remove(availableDirections.begin(), availableDirections.end(), SOUTH);
-    
+        removeFromVector(availableDirections, SOUTH);
+
     if (currentX == rightWall)
-        remove(availableDirections.begin(), availableDirections.end(), EAST);
-    
-    if (currentX == topWall)
-        remove(availableDirections.begin(), availableDirections.end(), NORTH);
-    
+        removeFromVector(availableDirections, EAST);
+
+    if (currentY == topWall)
+        removeFromVector(availableDirections, NORTH);
+
     return availableDirections;
 }
 
 bool MyAI::tileExist(const int &x, const int &y)
 {
     map<int, std::map<int, tile>>::iterator iter = worldMap.find(x);
+    if (iter == worldMap.end()) return false;
     map<int, tile>::iterator iter2 = worldMap[x].find(y);
-    return iter != worldMap.end() && iter2 != worldMap[x].end() ? true : false;
+    return iter2 != worldMap[x].end() ? true : false;
 }
 
 void MyAI::addNewTile(bool glitter,bool stench,bool breeze)
 {
-    if (tileExist(currentxValue, currentyValue))
+    if (!tileExist(currentxValue, currentyValue))
     {
         tile currentTile;
         currentTile.glitter = glitter;
@@ -113,125 +126,165 @@ void MyAI::addNewTile(bool glitter,bool stench,bool breeze)
     }
 }
 
-int MyAI::adjustDirection(int orientation, int chosenDirection)
+
+MyAI::direction MyAI::resolveNewOrientation(const int & action)
 {
-    switch (orientation)
+    MyAI::direction newOrientation;
+    if (action == TURN_RIGHT)
+        newOrientation = (MyAI::direction)((orientation + 1) % 4);
+    else if (action == TURN_LEFT && (orientation - 1) >= 0)
+        newOrientation = (MyAI::direction)((orientation - 1) % 4);
+    else if (action == TURN_LEFT && (orientation - 1) < 0)
+        newOrientation = (MyAI::direction)((4 + (orientation - 1)) % 4);
+    return newOrientation;
+}
+
+Agent::Action MyAI::adjustDirection(int chosenDirection)
+{
+    int numRotation1 = 0;
+    for (int i = 1; i < 4; ++i)
     {
-    case 1:
-        switch (chosenDirection)
-        {
-        case 2:
-            return TURN_RIGHT;
-        case 3:
-           return TURN_RIGHT;
-        case 4:
-           return TURN_LEFT;
-        }
-    case 2:
-        switch (chosenDirection)
-        {
-        case 1:
-            return TURN_LEFT;
-        case 3:
-            return TURN_RIGHT;
-        case 4:
-           return TURN_RIGHT;
-        }           
-    case 3:
-        switch (chosenDirection)
-        {
-        case 1:
-            return TURN_RIGHT;
-        case 2:
-            return TURN_RIGHT;
-        case 4:
-            return TURN_LEFT;
-        }
-   case 4:
-       switch (chosenDirection)
-       {
-       case 1:
-           return TURN_RIGHT;
-       case 2:
-          return TURN_RIGHT;
-       case 3:
-           return TURN_LEFT;
-       }
+        ++numRotation1;
+        if (((orientation + i) % 4) == chosenDirection)
+            break;
+    }
+    int numRotation2 = 0;
+    for (int i = 1; i < 4; ++i)
+    {
+        ++numRotation2;
+        if ((orientation - i) >= 0 &&((orientation - i) % 4) == chosenDirection)
+            break;
+        else if ((orientation - i) < 0 &&( (4 + (orientation - i)) % 4) == chosenDirection)
+            break;
+    }
+    Agent::Action toTurn;
+    if (numRotation1 > numRotation2)
+        toTurn = TURN_LEFT;
+    else   
+        toTurn = TURN_RIGHT;
+    return toTurn;
+}
+
+Agent::Action MyAI::resolveDirection(int chosenDirection)
+{
+    Agent::Action action = adjustDirection(chosenDirection);
+    orientation = resolveNewOrientation(chosenDirection);
+    return action;    
+}
+
+Agent::Action MyAI::backtrackAction()
+{
+    Agent::Action lastAction(trail.top());
+    trail.pop();
+
+    if (lastAction == TURN_LEFT)
+    {
+        orientation = resolveNewOrientation(TURN_RIGHT);
+        return TURN_RIGHT;
+    }
+    else if (lastAction == TURN_RIGHT && turningAround == false)
+    {
+        orientation = resolveNewOrientation(TURN_LEFT);
+        return TURN_LEFT;
+    }
+    else if (lastAction == TURN_RIGHT && turningAround == true && turningAroundComplete == false){
+        orientation = resolveNewOrientation(TURN_RIGHT);
+        return TURN_RIGHT;
+    }
+    else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
+    {
+        turningAround = false;
+        turningAroundComplete = false;
+        return FORWARD;
     }
 }
-
-//a little bit suspicious on logic here
-int MyAI::backtrackAction()
-{
-    // lastAction = trail.top();
-    // trail.pop();
-    //     //gets to last relevant action
-    // while (lastAction == SHOOT || lastAction == GRAB) || lastAction == CLIMB)
-    // {
-    //     trail.pop();
-    //     lastAction = trail.top();
-    // }
-    //     if (lastAction == TURN_LEFT)
-    //         return TURN_RIGHT;
-    //     else if (lastAction == TURN_RIGHT && turningAround == false)
-    //         return TURN_LEFT;
-    //     else if (lastAction == TURN_RIGHT && turningAround == true && turningComplete == false)
-    //         return TURN_RIGHT;
-    //     else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
-    //     {
-    //         turningAround = false;
-    //         turningComplete = false;
-    //         return FOWARD;
-    //     }
-    //     stack<pair<int,int>>
-}
-
-
 
 //main method
 Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream)
 {
-    // heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
-    // add action to stack so we know where we are in order to backtrack correctly
+    //adding tile
     addNewTile(glitter,stench,breeze);
-    // no matter what move chosen moves increases by 1 and score decreases by 1
-    // totalMoves++;
-    // currentScore--;
-    // if (currentTile.glitter == true)
-    // {
-    //    goldGrabbed = true;
-    //    trail.push(GRAB);
-    //    currentScore += 1000;
-    //    return GRAB;
-    // }
-    // //basic case 1: you leave the cave b/c of danger
-    // if (currentTile.breeze == true || currentTile.stench == true) 
+    tile currentTile = worldMap[currentxValue][currentyValue];
+    
+    //updates wall location information
+    if (bump)
+        handleBump();
 
-    //    //this case you need to start backtracking to climb out
-    //    if (currentTile.xvalue != 1 && currentTile.yvalue != 1) 
-    //       return backtrackAction();
-    //    //this is case where we are back at original sqaure so we climb out
-    //    else
-    //    {
-    //       trail.push(CLIMB);
-    //       return CLIMB;
-    //    }
-    // //basic case 2: no danger so you proceed
+    //***************************************************Action Logic***************************************************
+    
+    //always check tile for gold first thing and grab if possible
+    if (currentTile.glitter)
+    {
+       currentScore += 1000;
+       return GRAB;
+    }
+    
+    //BASE CASE 1: Leaving: you leave when you have the gold or you sense danger
+    if (currentTile.breeze == true || currentTile.stench == true) 
+    {
+        if (trail.size() == 0)
+            return CLIMB;
+    }
+    else
+    {
+        vector<MyAI::direction> availableDirections = determineWalls(currentxValue, currentyValue);
+        int randomIndex = rand() % availableDirections.size();
+        int chosenDirection = availableDirections[randomIndex];
+    }
+                    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //BASE CASE 2: no danger so you proceed
     // else
     // {
-    //     vector<int> availableDirections = determineWalls(currentX, currentY);
+    //     vector<MyAI::direction> availableDirections = determineWalls(currentxValue, currentyValue);
     //     int randomIndex = rand() % availableDirections.size();
     //     int chosenDirection = availableDirections[randomIndex];
+    //     std::cout << std::endl;
+
+    //     std::cout << "Number of Available Directions " << availableDirections.size() << std::endl;
+    //     std::cout << "Available Direction ";
+    //     for (int i = 0; i < availableDirections.size(); ++i)
+    //         std::cout << availableDirections[i] << " ";
+    //     std::cout << std::endl;
+    //     std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
+    //     std::cout << "Chosen Direction " << chosenDirection << std::endl;      
     //     if (orientation == chosenDirection)
     //     {
-    //         trail.push(FOWARD);
-    //         return FOWARD;
+    //         trail.push(FORWARD);
+    //         handlePositionChange();
+    //         return FORWARD;
     //     }
     //     else
     //     {
-    //         int action = adjustDirection(orientation, chosenDirection);
+    //         Agent::Action action = resolveDirection(chosenDirection);
     //         trail.push(action);
     //         return action;
     //     }
     // }
-}
