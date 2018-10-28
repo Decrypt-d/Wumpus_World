@@ -23,6 +23,7 @@
 #include "Agent.hpp"
 #include <map>
 #include <stack> 
+#include <vector>
 #include <iostream>
 
 
@@ -38,16 +39,23 @@ public:
 	int totalMoves;
 	int currentScore;
 	bool wumpusKilled;
+	bool goldGrabbed;
+
+	//position info
 	bool shouldModifyPos;
 	int orientation; 
-	enum {NORTH,EAST,SOUTH,WEST};
-	int topWall;
-	int rightWall;
-	Stack<int> trail;
-
-	//position
 	int currentxValue;
 	int currentyValue;
+
+	//boundary and wall variables
+	enum direction {NORTH,EAST,SOUTH,WEST};
+	int topWall;
+	int rightWall;
+
+	//backtracking functionality
+	stack<int> trail;
+	bool turningAround;
+	bool turningComplete;
 	
 	class tile{
 	
@@ -67,7 +75,19 @@ public:
 	//vector that will contain all tiles
 	map<int,map<int,tile>> worldMap;
 	
+	//main method
 	Action getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream);
+
+    //position related methods
+	void handlePositionChange(const bool & bump);
+    vector<int> determineWalls(int currentX, int currrentY);
+	int adjustDirection(int orientation, int chosenDirection);
+    int backtrackAction();
+
+	//tile related methods
+    bool tileExist(const int & x,const int & y);
+    void addNewTile(bool glitter, bool stench, bool breeze);
+	void handleBump();
 };
 
 #endif

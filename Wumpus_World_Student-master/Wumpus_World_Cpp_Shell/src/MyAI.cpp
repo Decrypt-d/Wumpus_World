@@ -18,32 +18,34 @@
 // ======================================================================
 
 #include "MyAI.hpp"
+#include <algorithm>
 
 using namespace std;
 MyAI::MyAI() : Agent()
 {
-   //meta info
-   movesInAdvance = 6;
-   totalMoves = 0;
-   currentScore = 0;
-   wumpusKilled = 0;
+    //meta info
+    movesInAdvance = 6;
+    totalMoves = 0;
+    currentScore = 0;
+    wumpusKilled = false;
+    goldGrabbed = false;
 
-   //position info
-   orientation = 2;
-   shouldModifyPos = false;
-   currentxValue = 1;
-   currentyValue = 1;
+    //position info
+    orientation = 2;
+    shouldModifyPos = false;
+    currentxValue = 1;
+    currentyValue = 1;
 
-   //wall and boundary info
-   topWall = NULL;
-   rightWall = NULL;
+    //wall and boundary info
+    topWall = -1;
+    rightWall = -1;
 
-   //backtracking info
-   turningAround = false;
-   turningComplete = false;
+    //backtracking info
+    turningAround = false;
+    turningComplete = false;
 }
 
-void MyAI::handlePositionChange(const bool & bump)
+void MyAI::handlePositionChange(const bool &bump)
 {
     if (shouldModifyPos && !bump)
     {
@@ -53,154 +55,183 @@ void MyAI::handlePositionChange(const bool & bump)
             currentyValue -= 1;
         else if (orientation == EAST)
             currentxValue += 1;
-        else if (oreintation == WEST)
-            curentxValue -= 1;
+        else if (orientation == WEST)
+            currentxValue -= 1;
         shouldModifyPos = false;
     }
 }
 
-vector<int> MyAI::determineWalls(int currentX, int currrentY)
+
+void MyAI::handleBump()
+{
+
+}
+
+
+vector<int> MyAI::determineWalls(int currentX, int currentY)
 {
     vector<int> availableDirections;
-    availableDirections.insert(WEST);
-    availableDirections.insert(EAST);
-    availableDirections.insert(NORTH);
-    availableDirections.insert(SOUTH);
-    if(currentX == 1)
-       availableDirections.remove(WEST);
-    if(currentY == 1)
-       availableDirections.remove(SOUTH);
-    if(currentX == rightWall)
-       availableDirections.remove(EAST);
-    if(currentX == topWall)
-       availableDirections.remove(NORTH);
+    vector<int>:: iterator iter;
+    iter = availableDirections.begin();
+
+    availableDirections.insert(iter, WEST);
+    availableDirections.insert(iter + 1, EAST);
+    availableDirections.insert(iter + 2, NORTH);
+    availableDirections.insert(iter + 3, SOUTH);
+
+    if (currentX == 1)
+        remove(availableDirections.begin(), availableDirections.end(), WEST);
+    
+    if (currentY == 1)
+       remove(availableDirections.begin(), availableDirections.end(), SOUTH);
+    
+    if (currentX == rightWall)
+        remove(availableDirections.begin(), availableDirections.end(), EAST);
+    
+    if (currentX == topWall)
+        remove(availableDirections.begin(), availableDirections.end(), NORTH);
+    
     return availableDirections;
 }
 
-bool MyAI::tileExist(const int & x,const int & y)
+bool MyAI::tileExist(const int &x, const int &y)
 {
-   map<int, std::map<int, tile>>::iterator iter = worldMap.find(x);
-   map<int, tile>::iterator iter2 = worldMap[x].find(y);
-   return iter != worldMap.end() && iter2 != worldMap[x].end() ? true : false;
+    map<int, std::map<int, tile>>::iterator iter = worldMap.find(x);
+    map<int, tile>::iterator iter2 = worldMap[x].find(y);
+    return iter != worldMap.end() && iter2 != worldMap[x].end() ? true : false;
 }
 
-void MyAI::addNewTile()
+void MyAI::addNewTile(bool glitter,bool stench,bool breeze)
 {
-   if (titleExist(currentxValue,currentyValue))
-   {
-       tile currentTile;
-       currentTile.glitter = glitter;
-       currentTile.stench = stench;
-       currentTile.breeze = breeze;
-       worldMap[currentxValue][currentyValue] = currentTile;
-   }   
+    if (tileExist(currentxValue, currentyValue))
+    {
+        tile currentTile;
+        currentTile.glitter = glitter;
+        currentTile.stench = stench;
+        currentTile.breeze = breeze;
+        worldMap[currentxValue][currentyValue] = currentTile;
+    }
 }
 
 int MyAI::adjustDirection(int orientation, int chosenDirection)
 {
-   switch(orientation) {
-      case 1 :
-         switch(chosenDirection)
-            case 2 || 3:
-               return TURN_RIGHT;
-            case 3:
-               return TURN_RIGHT;
-            case 4:
-               return TURN_LEFT;
-      case 2 :
-       switch(chosenDirection)
-            case 1:
-               return TURN_LEFT;
-            case 3:
-               return TURN_RIGHT;
-            case 4:
-               return TURN_RIGHT;
-      case 3 :
-       switch(chosenDirection)
-            case 1:
-               return TURN_RIGHT;
-            case 2:
-               return TURN_RIGHT;
-            case 4:
-               return TURN_LEFT;
-      case 4 :
-       switch(chosenDirection)
-            case 1:
-               return TURN_RIGHT;
-            case 2:
-               return TURN_RIGHT;
-            case 3:
-               return TURN_LEFT;
+    switch (orientation)
+    {
+    case 1:
+        switch (chosenDirection)
+        {
+        case 2:
+            return TURN_RIGHT;
+        case 3:
+           return TURN_RIGHT;
+        case 4:
+           return TURN_LEFT;
+        }
+    case 2:
+        switch (chosenDirection)
+        {
+        case 1:
+            return TURN_LEFT;
+        case 3:
+            return TURN_RIGHT;
+        case 4:
+           return TURN_RIGHT;
+        }           
+    case 3:
+        switch (chosenDirection)
+        {
+        case 1:
+            return TURN_RIGHT;
+        case 2:
+            return TURN_RIGHT;
+        case 4:
+            return TURN_LEFT;
+        }
+   case 4:
+       switch (chosenDirection)
+       {
+       case 1:
+           return TURN_RIGHT;
+       case 2:
+          return TURN_RIGHT;
+       case 3:
+           return TURN_LEFT;
+       }
+    }
 }
-
 
 //a little bit suspicious on logic here
 int MyAI::backtrackAction()
 {
-   lastAction = trail.top()
-   trail.pop()
-   
-   //gets to last relevant action
-   while(lastAction == SHOOT || lastAction == GRAB) || lastAction == CLIMB)
-   {
-       trail.pop();
-       lastAction = trail.top();
-   }
-   if(lastAction == TURN_LEFT)
-      return TURN_RIGHT;
-   else if(lastAction == TURN_RIGHT && turningAround == false)
-      return TURN_LEFT;
-   else if(lastAction == TURN_RIGHT && turningAround == true && turningComplete == false)
-      return TURN_RIGHT
-   else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
-   {
-      turningAround = false;
-      turningComplete = false;
-      return FOWARD
-   }    
+    // lastAction = trail.top();
+    // trail.pop();
+    //     //gets to last relevant action
+    // while (lastAction == SHOOT || lastAction == GRAB) || lastAction == CLIMB)
+    // {
+    //     trail.pop();
+    //     lastAction = trail.top();
+    // }
+    //     if (lastAction == TURN_LEFT)
+    //         return TURN_RIGHT;
+    //     else if (lastAction == TURN_RIGHT && turningAround == false)
+    //         return TURN_LEFT;
+    //     else if (lastAction == TURN_RIGHT && turningAround == true && turningComplete == false)
+    //         return TURN_RIGHT;
+    //     else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
+    //     {
+    //         turningAround = false;
+    //         turningComplete = false;
+    //         return FOWARD;
+    //     }
+    //     stack<pair<int,int>>
 }
 
 
 
-//workhorse function, world passes these input in (all the bools as parameters) in line 105 of world.cpp) parameters is how it communicates the world info
+//main method
 Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump, bool scream)
 {
-   //heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
-   //add action to stack so we know where we are in order to backtrack correctly
+    // heuristic that if you sense these things intially chance is too high for failure, just climb out to minimize damage
+    // add action to stack so we know where we are in order to backtrack correctly
+    addNewTile(glitter,stench,breeze);
+    // no matter what move chosen moves increases by 1 and score decreases by 1
+    // totalMoves++;
+    // currentScore--;
+    // if (currentTile.glitter == true)
+    // {
+    //    goldGrabbed = true;
+    //    trail.push(GRAB);
+    //    currentScore += 1000;
+    //    return GRAB;
+    // }
+    // //basic case 1: you leave the cave b/c of danger
+    // if (currentTile.breeze == true || currentTile.stench == true) 
 
-   //no matter what move chosen moves increases by 1 and score decreases by 1
-   totalMoves++;
-   currentScore--:
-   if(currentTile.breeze == true || currentTile.stench == true)
-      if(currentTile.glitter == true)
-      {
-         trail.push(GRAB);
-         currentScore += 1000;
-         return GRAB;
-      }
-      //this case you need to start backtracking to climb out
-      else if(currentTile.xvalue != 0 && currentTile.yvalue != 0)
-         return backtrackAction();
-      else //this is case where we are back at original sqaure
-      {
-         trail.push(CLIMB);
-         return CLIMB;
-      }
-   //in case where there is no danger you pick a random direction and proceed in that direction
-   else
-   {
-      vector<int> availableDirections = determineWalls(currentX, currentY)
-      int randomIndex = rand() % availableDirections.size();
-      int chosenDirection = availableDirections[randomIndex];
-      if(orientation == chosenDirection)
-      {
-         trail.push(action)
-         return FOWARD;
-      }
-      else
-      {
-         int action = adjustDirection(orientation,chosenDirection);
-         trail.push(action);
-         return action;
-      }
-}   }
+    //    //this case you need to start backtracking to climb out
+    //    if (currentTile.xvalue != 1 && currentTile.yvalue != 1) 
+    //       return backtrackAction();
+    //    //this is case where we are back at original sqaure so we climb out
+    //    else
+    //    {
+    //       trail.push(CLIMB);
+    //       return CLIMB;
+    //    }
+    // //basic case 2: no danger so you proceed
+    // else
+    // {
+    //     vector<int> availableDirections = determineWalls(currentX, currentY);
+    //     int randomIndex = rand() % availableDirections.size();
+    //     int chosenDirection = availableDirections[randomIndex];
+    //     if (orientation == chosenDirection)
+    //     {
+    //         trail.push(FOWARD);
+    //         return FOWARD;
+    //     }
+    //     else
+    //     {
+    //         int action = adjustDirection(orientation, chosenDirection);
+    //         trail.push(action);
+    //         return action;
+    //     }
+    // }
+}
