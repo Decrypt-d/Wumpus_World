@@ -23,6 +23,7 @@
 #include "Agent.hpp"
 #include <map>
 #include <stack> 
+#include <queue>
 #include <vector>
 #include <iostream>
 
@@ -34,6 +35,11 @@ class MyAI : public Agent
 public:
 	MyAI ( void );
 
+	//boundary and wall variables
+	enum direction {NORTH,EAST,SOUTH,WEST};
+	int topWall;
+	int rightWall;
+
 	//meta info
 	int movesInAdvance;
 	int totalMoves;
@@ -41,17 +47,13 @@ public:
 	bool wumpusKilled;
 
 	//position info
-	int orientation; 
+	MyAI::direction orientation; 
 	int currentxValue;
 	int currentyValue;
 
-	//boundary and wall variables
-	enum direction {NORTH,EAST,SOUTH,WEST};
-	int topWall;
-	int rightWall;
-
 	//backtracking functionality
 	stack<Agent::Action> trail;
+	queue<Agent::Action> sequenceOfActions;
 	bool backTrackingOn;
 	bool turningAround;
 	bool turningAroundComplete;
@@ -91,10 +93,15 @@ public:
     //position related methods
 	void handlePositionChange();
     vector<MyAI::direction> determineWalls(int currentX, int currrentY);
-	Agent::Action adjustDirection(int chosenDirection);
+	Agent::Action adjustDirection(const MyAI::direction & orientation,const MyAI::direction & chosenDirection);
 	Agent::Action backtrackAction();
-	MyAI::direction resolveNewOrientation(const int & action);
-	Agent::Action resolveDirection(int chosenDirection);
+	MyAI::direction resolveNewOrientation(const MyAI::direction & orientation,const Agent::Action & action);
+	
+	Agent::Action Forward();
+	Agent::Action Turn_Left();
+	Agent::Action Turn_Right();
+	void createSequenceOfAction(const MyAI::direction & chosenDirection);
+	Agent::Action resolveAction(Agent::Action action);
 
 	//tile related methods
     bool tileExist(const int & x,const int & y);

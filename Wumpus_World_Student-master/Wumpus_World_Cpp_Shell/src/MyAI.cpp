@@ -127,7 +127,7 @@ void MyAI::addNewTile(bool glitter,bool stench,bool breeze)
 }
 
 
-MyAI::direction MyAI::resolveNewOrientation(const int & action)
+MyAI::direction MyAI::resolveNewOrientation(const MyAI::direction & orientation,const Agent::Action & action)
 {
     MyAI::direction newOrientation;
     if (action == TURN_RIGHT)
@@ -139,7 +139,7 @@ MyAI::direction MyAI::resolveNewOrientation(const int & action)
     return newOrientation;
 }
 
-Agent::Action MyAI::adjustDirection(int chosenDirection)
+Agent::Action MyAI::adjustDirection(const MyAI::direction & orientation,const MyAI::direction & chosenDirection)
 {
     int numRotation1 = 0;
     for (int i = 1; i < 4; ++i)
@@ -165,11 +165,42 @@ Agent::Action MyAI::adjustDirection(int chosenDirection)
     return toTurn;
 }
 
-Agent::Action MyAI::resolveDirection(int chosenDirection)
+
+void MyAI::createSequenceOfAction(const MyAI::direction & chosenDirection)
 {
-    Agent::Action action = adjustDirection(chosenDirection);
-    orientation = resolveNewOrientation(chosenDirection);
-    return action;    
+    MyAI::direction mockOrientation = orientation;
+    while (mockOrientation != chosenDirection)
+    {
+       Agent::Action action = adjustDirection(mockOrientation,chosenDirection);
+       sequenceOfActions.push(action);  
+       mockOrientation = resolveNewOrientation(mockOrientation, action);
+    }
+    sequenceOfActions.push(FORWARD);
+}
+
+Agent::Action MyAI::Turn_Left(){
+    orientation = resolveNewOrientation(orientation,TURN_LEFT);
+    return TURN_LEFT;
+}
+
+Agent::Action MyAI::Turn_Right(){
+    orientation = resolveNewOrientation(orientation,TURN_RIGHT);
+    return TURN_RIGHT;
+}
+
+Agent::Action MyAI::Forward(){
+    handlePositionChange();
+    return FORWARD;
+}
+
+Agent::Action MyAI::resolveAction(Agent::Action action)
+{
+    if (action == TURN_LEFT)
+        return Turn_Left();
+    else if (action == TURN_RIGHT)
+        return Turn_Right();
+    else
+        return Forward();    
 }
 
 Agent::Action MyAI::backtrackAction()
@@ -179,16 +210,16 @@ Agent::Action MyAI::backtrackAction()
 
     if (lastAction == TURN_LEFT)
     {
-        orientation = resolveNewOrientation(TURN_RIGHT);
+        orientation = resolveNewOrientation(orientation,TURN_RIGHT);
         return TURN_RIGHT;
     }
     else if (lastAction == TURN_RIGHT && turningAround == false)
     {
-        orientation = resolveNewOrientation(TURN_LEFT);
+        orientation = resolveNewOrientation(orientation,TURN_LEFT);
         return TURN_LEFT;
     }
     else if (lastAction == TURN_RIGHT && turningAround == true && turningAroundComplete == false){
-        orientation = resolveNewOrientation(TURN_RIGHT);
+        orientation = resolveNewOrientation(orientation,TURN_RIGHT);
         return TURN_RIGHT;
     }
     else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
@@ -210,37 +241,44 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     if (bump)
         handleBump();
 
+   
     //***************************************************Action Logic***************************************************
     
-    //always check tile for gold first thing and grab if possible
+    //continues to resolve desired direction if needed
+    if (sequenceOfActions.size() != 0)
+    {
+        Agent::Action action = sequenceOfActions.front();
+        sequenceOfActions.pop();
+       return resolveAction(action);
+    }  
+    //always check tile for gold and grab if possible
     if (currentTile.glitter)
     {
        currentScore += 1000;
        return GRAB;
     }
-    
+
     //BASE CASE 1: Leaving: you leave when you have the gold or you sense danger
     if (currentTile.breeze == true || currentTile.stench == true) 
     {
         if (trail.size() == 0)
             return CLIMB;
+        orientation = resolveNewOrientation(orientation,TURN_LEFT);
+        return TURN_LEFT;
     }
-    else
+    //BASE CASE 2: No danger, move forward in a random direction
+    else 
     {
         vector<MyAI::direction> availableDirections = determineWalls(currentxValue, currentyValue);
         int randomIndex = rand() % availableDirections.size();
-        int chosenDirection = availableDirections[randomIndex];
-    }
-                    
+        MyAI::direction chosenDirection = availableDirections[randomIndex];
+        std::cout << "Chosen Direction " << chosenDirection << std::endl;
+        createSequenceOfAction(chosenDirection);
+        Agent::Action action = sequenceOfActions.front();
+        sequenceOfActions.pop();
+       return resolveAction(action);
+    }   
 }
-
-
-
-
-
-
-
-
 
 
 
