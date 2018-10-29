@@ -103,7 +103,13 @@ vector<MyAI::direction> MyAI::determineWalls(int currentX, int currentY)
 
     if (currentY == topWall)
         removeFromVector(availableDirections, NORTH);
-
+    
+    if (!backTrackingOn && trail.size() > 0)
+    {
+        pair<int,int> previousSquare = trail.top();
+        removeFromVector(availableDirections,determineBackTrackDirection(previousSquare.first,previousSquare.second));
+    }
+    
     return availableDirections;
 }
 
@@ -190,7 +196,8 @@ Agent::Action MyAI::Turn_Right(){
 }
 
 Agent::Action MyAI::Forward(){
-    trail.push(pair<int,int>(currentxValue,currentyValue));
+    if (!backTrackingOn)
+        trail.push(pair<int,int>(currentxValue,currentyValue));
     handlePositionChange();
     return FORWARD;
 }
