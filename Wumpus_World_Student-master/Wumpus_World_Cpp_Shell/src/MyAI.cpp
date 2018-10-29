@@ -238,6 +238,10 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     addNewTile(glitter,stench,breeze);
     tile currentTile = worldMap[currentxValue][currentyValue];
     
+    std::cout << "Chosen Direction " << chosenDirection << std::endl;
+    std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
+
+
     //updates wall location information
     if (bump)
         handleBump();
@@ -275,9 +279,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
         vector<MyAI::direction> availableDirections = determineWalls(currentxValue, currentyValue);
         int randomIndex = rand() % availableDirections.size();
         MyAI::direction chosenDirection = availableDirections[randomIndex];
-        std::cout << "Chosen Direction " << chosenDirection << std::endl;
         createSequenceOfAction(chosenDirection);
-        std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
         Agent::Action action = sequenceOfActions.front();
         sequenceOfActions.pop();
        return resolveAction(action);
