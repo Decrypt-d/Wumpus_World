@@ -257,7 +257,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     {
        currentScore += 1000;
        goldGrabbed = true;
-       backtrackAction = true;
+       backTrackingOn = true;
        return GRAB;
     }
 

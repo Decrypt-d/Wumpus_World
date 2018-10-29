@@ -45,6 +45,7 @@ public:
 	int totalMoves;
 	int currentScore;
 	bool wumpusKilled;
+	bool goldGrabbed;
 
 	//position info
 	MyAI::direction orientation; 
