@@ -190,6 +190,7 @@ Agent::Action MyAI::Turn_Right(){
 }
 
 Agent::Action MyAI::Forward(){
+    trail.push(pair<int,int>(currentxValue,currentyValue));
     handlePositionChange();
     return FORWARD;
 }
@@ -204,31 +205,31 @@ Agent::Action MyAI::resolveAction(Agent::Action action)
         return Forward();    
 }
 
-Agent::Action MyAI::backtrackAction()
+MyAI::direction MyAI::determineBackTrackDirection(const int & destinationxValue,const int & destinationyValue)
 {
-    Agent::Action lastAction(trail.top());
-    trail.pop();
+    if(currentxValue == destinationxValue)
+    {
+       if(currentyValue > destinationyValue)
+          return SOUTH;
+       else
+          return NORTH;
+    }
+    else //case where currentyValue == destinationyValue
+    {
+       if(currentxValue > destinationxValue)
+          return WEST;
+       else
+          return EAST;
+    }
+}
 
-    if (lastAction == TURN_LEFT)
-    {
-        orientation = resolveNewOrientation(orientation,TURN_RIGHT);
-        return TURN_RIGHT;
-    }
-    else if (lastAction == TURN_RIGHT && turningAround == false)
-    {
-        orientation = resolveNewOrientation(orientation,TURN_LEFT);
-        return TURN_LEFT;
-    }
-    else if (lastAction == TURN_RIGHT && turningAround == true && turningAroundComplete == false){
-        orientation = resolveNewOrientation(orientation,TURN_RIGHT);
-        return TURN_RIGHT;
-    }
-    else //case for going backward (retracing step) (lastAction == TURN_RIGHT && turningAround == true && turningComplete == true)
-    {
-        turningAround = false;
-        turningAroundComplete = false;
-        return FORWARD;
-    }
+void MyAI::backtrackAction()
+{
+   pair<int,int> destinationTile = trail.top();
+   trail.pop();
+   MyAI::direction chosenBackTrackDir = determineBackTrackDirection(destinationTile.first,destinationTile.second);
+   std::cout << "Chosen BkTrack Dir " << chosenBackTrackDir << std::endl; 
+   createSequenceOfAction(chosenBackTrackDir);  
 }
 
 //main method
@@ -239,7 +240,8 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     tile currentTile = worldMap[currentxValue][currentyValue];
     
     std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
-
+    std::cout << "Orientation " << orientation << std::endl;
+    std::cout << "Trail Size " << trail.size() << std::endl;
 
     //updates wall location information
     if (bump)
@@ -247,7 +249,6 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
 
    
     //***************************************************Action Logic***************************************************
-    
     //continues to resolve desired direction if needed
     if (sequenceOfActions.size() != 0)
     {
@@ -255,6 +256,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
         sequenceOfActions.pop();
        return resolveAction(action);
     }  
+
     //always check tile for gold and grab if possible
     if (currentTile.glitter && !goldGrabbed)
     {
@@ -264,13 +266,30 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        return GRAB;
     }
 
+    //handle backtracking decision
+    if (backTrackingOn && currentxValue != 1 && currentyValue != 1)
+    {
+        backtrackAction();
+        Agent::Action action = sequenceOfActions.front();
+        sequenceOfActions.pop();
+        return resolveAction(action);
+    }
+    else if (backTrackingOn && currentxValue == 1 && currentyValue == 1)
+        return CLIMB;
+
     //BASE CASE 1: Leaving: you leave when you have the gold or you sense danger
     if (currentTile.breeze == true || currentTile.stench == true) 
     {
-        if (trail.size() == 0)
+        if (trail.size() == 0 && currentxValue == 1 && currentyValue == 1)
             return CLIMB;
-        orientation = resolveNewOrientation(orientation,TURN_LEFT);
-        return TURN_LEFT;
+        else
+        {
+           backTrackingOn = true;
+           backtrackAction();
+           Agent::Action action = sequenceOfActions.front();
+           sequenceOfActions.pop();
+           return resolveAction(action);
+        }
     }
     //BASE CASE 2: No danger, move forward in a random direction
     else 

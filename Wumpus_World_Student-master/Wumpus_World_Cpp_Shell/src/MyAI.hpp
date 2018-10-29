@@ -53,7 +53,7 @@ public:
 	int currentyValue;
 
 	//backtracking functionality
-	stack<Agent::Action> trail;
+	stack<pair<int,int>> trail;
 	queue<Agent::Action> sequenceOfActions;
 	bool backTrackingOn;
 	bool turningAround;
@@ -95,7 +95,8 @@ public:
 	void handlePositionChange();
     vector<MyAI::direction> determineWalls(int currentX, int currrentY);
 	Agent::Action adjustDirection(const MyAI::direction & orientation,const MyAI::direction & chosenDirection);
-	Agent::Action backtrackAction();
+	void backtrackAction();
+	MyAI::direction determineBackTrackDirection(const int & destinationxValue,const int & destinationyValue);
 	MyAI::direction resolveNewOrientation(const MyAI::direction & orientation,const Agent::Action & action);
 	
 	Agent::Action Forward();
