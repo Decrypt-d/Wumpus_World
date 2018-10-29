@@ -248,6 +248,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     
     std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
     std::cout << "Orientation " << orientation << std::endl;
+    std::cout << "BacktrackingOn " << backTrackingOn << std::endl;
     std::cout << "Trail Size " << trail.size() << std::endl;
 
     //updates wall location information
@@ -274,7 +275,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     }
 
     //handle backtracking decision
-    if (backTrackingOn && currentxValue != 1 && currentyValue != 1)
+    if (backTrackingOn && (currentxValue != 1 || currentyValue != 1))
     {
         backtrackAction();
         Agent::Action action = sequenceOfActions.front();
