@@ -30,6 +30,7 @@ MyAI::MyAI() : Agent()
     totalMoves = 0;
     currentScore = 0;
     wumpusKilled = false;
+    goldGrabbed = false;
 
     //position info
     orientation = EAST;
@@ -252,9 +253,11 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        return resolveAction(action);
     }  
     //always check tile for gold and grab if possible
-    if (currentTile.glitter)
+    if (currentTile.glitter && !goldGrabbed)
     {
        currentScore += 1000;
+       goldGrabbed = true;
+       backtrackAction = true;
        return GRAB;
     }
 
@@ -274,6 +277,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
         MyAI::direction chosenDirection = availableDirections[randomIndex];
         std::cout << "Chosen Direction " << chosenDirection << std::endl;
         createSequenceOfAction(chosenDirection);
+        std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
         Agent::Action action = sequenceOfActions.front();
         sequenceOfActions.pop();
        return resolveAction(action);
