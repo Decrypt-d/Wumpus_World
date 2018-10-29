@@ -45,6 +45,7 @@ MyAI::MyAI() : Agent()
     backTrackingOn = false;
     turningAround = false;
     turningAroundComplete = false;
+    trail.push(pair<int,int>(1,1));
 }
 
 void MyAI::handlePositionChange()
@@ -235,7 +236,7 @@ void MyAI::backtrackAction()
    pair<int,int> destinationTile = trail.top();
    trail.pop();
    MyAI::direction chosenBackTrackDir = determineBackTrackDirection(destinationTile.first,destinationTile.second);
-   std::cout << "Chosen BkTrack Dir " << chosenBackTrackDir << std::endl; 
+//    std::cout << "Chosen BkTrack Dir " << chosenBackTrackDir << std::endl; 
    createSequenceOfAction(chosenBackTrackDir);  
 }
 
@@ -246,10 +247,11 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     addNewTile(glitter,stench,breeze);
     tile currentTile = worldMap[currentxValue][currentyValue];
     
-    std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
-    std::cout << "Orientation " << orientation << std::endl;
-    std::cout << "BacktrackingOn " << backTrackingOn << std::endl;
-    std::cout << "Trail Size " << trail.size() << std::endl;
+    // std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
+    // std::cout << "Orientation " << orientation << std::endl;
+    // std::cout << "BacktrackingOn " << backTrackingOn << std::endl;
+    // std::cout << "Trail Size " << trail.size() << std::endl;
+    // std::cout << "Sequence of Action Size " << sequenceOfActions.size() << std::endl;
 
     //updates wall location information
     if (bump)
@@ -288,7 +290,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     //BASE CASE 1: Leaving: you leave when you have the gold or you sense danger
     if (currentTile.breeze == true || currentTile.stench == true) 
     {
-        if (trail.size() == 0 && currentxValue == 1 && currentyValue == 1)
+        if (trail.size() == 1 && currentxValue == 1 && currentyValue == 1)
             return CLIMB;
         else
         {
@@ -306,7 +308,7 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
         int randomIndex = rand() % availableDirections.size();
         MyAI::direction chosenDirection = availableDirections[randomIndex];
         createSequenceOfAction(chosenDirection);
-        std::cout << "Chosen Direction " << chosenDirection << std::endl;
+        // std::cout << "Chosen Direction " << chosenDirection << std::endl;
         Agent::Action action = sequenceOfActions.front();
         sequenceOfActions.pop();
        return resolveAction(action);
