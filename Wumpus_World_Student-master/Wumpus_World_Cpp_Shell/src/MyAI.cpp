@@ -247,18 +247,18 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
     addNewTile(glitter,stench,breeze);
     tile currentTile = worldMap[currentxValue][currentyValue];
     
-    // std::cout << "Position " << currentxValue << " , " << currentyValue << std::endl;
-    // std::cout << "Orientation " << orientation << std::endl;
-    // std::cout << "BacktrackingOn " << backTrackingOn << std::endl;
-    // std::cout << "Trail Size " << trail.size() << std::endl;
-    // std::cout << "Sequence of Action Size " << sequenceOfActions.size() << std::endl;
-
     //updates wall location information
     if (bump)
         handleBump();
 
-   
     //***************************************************Action Logic***************************************************
+    
+    if (currentTile.glitter && !goldGrabbed)
+    {
+        goldGrabbed = true;
+        return GRAB;
+    }
+
     //continues to resolve desired direction if needed
     if (sequenceOfActions.size() != 0)
     {
@@ -267,6 +267,61 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
        return resolveAction(action);
     }  
 
+
+    if((currentxValue == 1 && currentyValue == 1) && (breeze = true ||  goldGrabbed || no unexplored edges))
+       return CLIMB
+    
+    if(currentxValue == 1 && currentyValue == 1 && stench == true)
+       -shoot and move in appropriate direction
+    
+    if(breeze || stench)
+       -get all possible directions
+       -Check if that tile that we are going to has an adjacent tile that is explored and is safe
+        if (it has an adjacent tile that is explored and is safe, we can go to that tile)
+   
+   if (safe)
+     -forward
+   else
+     Backtrack to previous tile. - remove the direction which we came from when we backtrack
+     Djikstra for backtracking
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
     //always check tile for gold and grab if possible
     if (currentTile.glitter && !goldGrabbed)
     {
@@ -312,5 +367,4 @@ Agent::Action MyAI::getAction(bool stench, bool breeze, bool glitter, bool bump,
         Agent::Action action = sequenceOfActions.front();
         sequenceOfActions.pop();
        return resolveAction(action);
-    }   
-}
+    }  */
